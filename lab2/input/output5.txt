@@ -1,0 +1,202 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                (0, 1),
+                (0, 2),
+                (1, 0),
+                (1, 1),
+                (1, 1),
+                (1, 2),
+                (1, 3),
+                (1, 5),
+                (2, 0),
+                (2, 1),
+                (2, 2),
+                (2, 3),
+                (2, 3),
+                (3, 1),
+                (3, 1),
+                (3, 2),
+                (3, 6),
+                (4, 2),
+                (4, 4),
+                (5, 2),
+                (5, 6),
+                (6, 4),
+                points.push((i, j));
+            && cross(result[result.len() - 2], result[result.len() - 1], *p) <= 0
+            .collect();
+            .into_iter()
+            .map(|(x, y)| Point::new(x, y))
+            80.0,
+            9.66,
+            ],
+            ],
+            for j in 0..=size {
+            result.pop();
+            vec![
+            vec![
+            vec![(-1, -1), (-1, 1), (1, -1), (1, 1)],
+            vec![(-1, -1), (0, 0), (-1, 1), (1, -1), (1, 1)],
+            vec![(-10, -10), (0, 0), (-10, 10), (10, -10), (10, 10)],
+            vec![(1, 1), (1, 5), (3, 1), (3, 6), (5, 2), (5, 6), (6, 4)],
+            vec![(2, 1), (2, 3), (2, 2), (3, 2), (1, 2)],
+            vec![(2, 1), (2, 3), (2, 2), (3, 2), (1, 2)],
+            vec![(2, 1), (2, 3), (3, 2), (1, 2)],
+            vec![(2, 1), (2, 3), (3, 2), (1, 2)],
+            vec![(2, 2), (5, 1), (8, 2), (5, 3), (3, 4), (5, 8)],
+            vec![(2, 2), (5, 1), (8, 2), (5, 8)],
+            }
+        );
+        );
+        );
+        );
+        );
+        );
+        );
+        Self { x, y }
+        assert_eq!(polygon, excepted)
+        assert_eq!(result, excepted);
+        buf.clear();
+        envelopes_test_helper(
+        envelopes_test_helper(
+        envelopes_test_helper(
+        envelopes_test_helper(
+        envelopes_test_helper(
+        excepted.sort();
+        for i in 0..=size {
+        let mut excepted: Vec<_> = excepted
+        let mut iter = buf.split_whitespace();
+        let mut points = Vec::new();
+        let mut points = points.into_iter().map(|(x, y)| Point::new(x, y)).collect();
+        let mut points: Vec<_> = points.into_iter().map(|(x, y)| Point::new(x, y)).collect();
+        let mut polygon = convex_hull(&mut points);
+        let p1 = polygon[i];
+        let p2 = polygon[(i + 1) % polygon.len()];
+        let result = solve(&mut points);
+        let size = 100;
+        let x = iter.next().unwrap().parse().unwrap();
+        let x_diff = p1.x - p2.x;
+        let y = iter.next().unwrap().parse().unwrap();
+        let y_diff = p1.y - p2.y;
+        perimeter += ((x_diff * x_diff + y_diff * y_diff) as f64).sqrt();
+        points.push(Point { x, y })
+        polygon.sort();
+        result.push(*p);
+        return points.clone();
+        stdin.read_line(&mut buf).unwrap();
+        test_helper(
+        test_helper(
+        test_helper(points, (size * 4).into());
+        test_helper(vec![(0, 1), (0, 0), (-1, -1), (1, -1)], 6.47);
+        test_helper(vec![(2, 1), (2, 2), (2, 3), (3, 2), (1, 2)], 5.66);
+        while result.len() >= 2
+        {
+        }
+        }
+    #[test]
+    #[test]
+    #[test]
+    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+    (calculate_perimeter(&polygon) * 100.0).round() / 100.0
+    fn envelopes_test_helper(points: Vec<(i32, i32)>, excepted: Vec<(i32, i32)>) {
+    fn envelopes_tests() {
+    fn task5_big_test() {
+    fn task5_tests() {
+    fn test_helper(points: Vec<(i32, i32)>, excepted: f64) {
+    for i in 0..count {
+    for i in 0..polygon.len() {
+    for p in points.iter() {
+    if points.len() <= 3 {
+    let count = buf.trim().parse::<usize>().unwrap();
+    let mut buf = String::new();
+    let mut lower = get_half_envelope(&points);
+    let mut perimeter = 0.0;
+    let mut points = Vec::new();
+    let mut points = input();
+    let mut result = Vec::new();
+    let mut upper = get_half_envelope(&points.iter().rev().cloned().collect());
+    let polygon = convex_hull(points);
+    let result = solve(&mut points);
+    let stdin = std::io::stdin();
+    lower
+    lower.extend(upper);
+    lower.pop();
+    perimeter
+    points
+    println!("{}", result);
+    pub fn new(x: i32, y: i32) -> Self {
+    quick_sort_non_recursive(points, false);
+    result
+    stdin.read_line(&mut buf).unwrap();
+    upper.pop();
+    use super::*;
+    x: i32,
+    y: i32,
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+#[cfg(test)]
+#[derive(Debug, Eq, Ord, PartialEq, Hash, PartialOrd, Clone, Copy)]
+///
+/// 1) Если результат > 0: Точки образуют поворот против часовой стрелки (точка B находится "слева" от вектора OA).
+/// 2) Если результат < 0: Точки образуют поворот по часовой стрелке (точка B находится "справа" от вектора OA)
+/// 3) Если результат = 0: Точки лежат на одной прямой.
+/// Вектор points должен быть отсортирован!
+/// Вычисляет векторное произведение для определения ориентации тройки точек.
+/// Собирает половину огибающей оболочки по полярному углу
+fn calculate_perimeter(polygon: &Vec<Point>) -> f64 {
+fn convex_hull(points: &mut Vec<Point>) -> Vec<Point> {
+fn cross(o: Point, a: Point, b: Point) -> i32 {
+fn get_half_envelope(points: &Vec<Point>) -> Vec<Point> {
+fn input() -> Vec<Point> {
+impl Point {
+mod tests {
+pub fn run() {
+pub fn solve(points: &mut Vec<Point>) -> f64 {
+pub struct Point {
+use crate::modules::quick_sort::quick_sort_non_recursive;
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
