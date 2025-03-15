@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 criterion = "0.5.1"
+lab2 = { path = "../lab2" }
 
 [[bench]]
 name = "benchmarks"

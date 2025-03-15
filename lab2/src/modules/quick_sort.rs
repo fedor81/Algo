@@ -20,7 +20,11 @@ pub fn quick_sort<T: PartialOrd + Clone>(collection: &mut [T], reverse: bool) {
     quick_sort(&mut collection[partition_index + 1..], reverse);
 }
 
-pub fn quick_sort_non_recursive<T: PartialOrd + Clone>(collection: &mut [T], reverse: bool) {
+pub fn quick_sort_cmp<F, T>(collection: &mut [T], cmp: F)
+where
+    T: PartialOrd + Clone,
+    F: Fn(&T, &T) -> bool,
+{
     let mut stack = Vec::new();
     stack.push((0, collection.len()));
 
@@ -34,9 +38,7 @@ pub fn quick_sort_non_recursive<T: PartialOrd + Clone>(collection: &mut [T], rev
 
         let mut partition_index = start;
         for i in start..end - 1 {
-            if (collection[i] <= collection[end - 1] && !reverse)
-                || (collection[i] >= collection[end - 1] && reverse)
-            {
+            if cmp(&collection[i], &collection[end - 1]) {
                 collection.swap(partition_index, i);
                 partition_index += 1;
             }
@@ -51,6 +53,10 @@ pub fn quick_sort_non_recursive<T: PartialOrd + Clone>(collection: &mut [T], rev
             stack.push((partition_index + 1, end));
         }
     }
+}
+
+pub fn quick_sort_non_recursive<T: PartialOrd + Clone>(collection: &mut [T], reverse: bool) {
+    quick_sort_cmp(collection, |a, b| (a < b && !reverse) || (a > b && reverse))
 }
 
 #[cfg(test)]
