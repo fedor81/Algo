@@ -1,0 +1,14 @@
+[package]
+name = "lab4"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+criterion = "0.5.1"
+lab1 = { path = "../lab1" }
+num-bigint = "0.4.6"
+rand = "0.9.0"
+
+[[bench]]
+name = "benchmarks"
+harness = false

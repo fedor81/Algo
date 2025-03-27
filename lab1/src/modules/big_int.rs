@@ -11,6 +11,27 @@ pub struct BigInt {
 }
 
 impl BigInt {
+    pub fn from(mut n: i64) -> Self {
+        let mut digits = Vec::new();
+
+        while n > 0 {
+            digits.push((n % 10) as i8);
+            n /= 10;
+        }
+
+        Self {
+            digits: Rc::new(digits),
+            negative: n < 0,
+        }
+    }
+
+    pub fn zero() -> Self {
+        Self {
+            digits: Rc::new(Vec::new()),
+            negative: false,
+        }
+    }
+
     pub fn from_str(s: &str) -> Self {
         let negative = s.starts_with('-');
         let s = if negative { &s[1..] } else { s };
