@@ -5,6 +5,7 @@ use std::{
     rc::Rc,
 };
 
+#[derive(Debug, Eq)]
 pub struct BigInt {
     digits: Rc<Vec<i8>>,
     negative: bool,
@@ -13,6 +14,8 @@ pub struct BigInt {
 impl BigInt {
     pub fn from(mut n: i64) -> Self {
         let mut digits = Vec::new();
+        let negative = n < 0;
+        n = n.abs();
 
         while n > 0 {
             digits.push((n % 10) as i8);
@@ -21,7 +24,7 @@ impl BigInt {
 
         Self {
             digits: Rc::new(digits),
-            negative: n < 0,
+            negative,
         }
     }
 
@@ -51,6 +54,24 @@ impl BigInt {
     fn remove_zeros(digits: &mut Vec<i8>) {
         while digits[digits.len() - 1] == 0 && digits.len() > 1 {
             digits.pop();
+        }
+    }
+}
+
+impl Default for BigInt {
+    fn default() -> Self {
+        Self {
+            digits: Rc::new(vec![0]),
+            negative: false,
+        }
+    }
+}
+
+impl Clone for BigInt {
+    fn clone(&self) -> Self {
+        Self {
+            digits: self.digits.clone(),
+            negative: self.negative,
         }
     }
 }
@@ -206,6 +227,12 @@ impl PartialOrd for BigInt {
             }
             Some(Ordering::Equal)
         }
+    }
+}
+
+impl Ord for BigInt {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
     }
 }
 

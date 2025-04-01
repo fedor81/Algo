@@ -1,5 +1,11 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use lab4::tasks::{task2, task3, task5};
+use core::num;
+use std::{time::Duration, u32};
+
+use criterion::{
+    black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
+    PlotConfiguration,
+};
+use lab4::tasks::{task2, task3, task5, task7};
 use rand::Rng;
 
 fn test_task2(c: &mut Criterion) {
@@ -65,10 +71,83 @@ fn task5_bench(c: &mut Criterion) {
     group.finish();
 }
 
+fn task7_bench(c: &mut Criterion) {
+    let mut rng = rand::rng();
+    let count = 500000;
+    let counts = vec![count / 4, count / 2, count];
+    let probabilities = vec![0.1, 0.3, 0.5, 0.7, 0.9];
+
+    let mut group = c.benchmark_group("task7");
+    group.sample_size(10);
+
+    for &count in &counts {
+        for &probability in &probabilities {
+            let (numbers, queries) = get_task7_numbers_queries(count, count, probability, &mut rng);
+            group.bench_function(
+                format!(
+                    "solve_on_other_bigint(sum/replace: {}, count: {})",
+                    probability, count
+                ),
+                |b| {
+                    b.iter(|| {
+                        task7::solve_on_other_bigint(black_box(&numbers), black_box(&queries))
+                    })
+                },
+            );
+        }
+    }
+
+    for &count in &counts {
+        for &probability in &probabilities {
+            let (numbers, queries) = get_task7_numbers_queries(count, count, probability, &mut rng);
+            group.bench_function(
+                format!(
+                    "solve_on_my_bigint(sum/replace: {}, count: {})",
+                    probability, count
+                ),
+                |b| b.iter(|| task7::solve_on_my_bigint(black_box(&numbers), black_box(&queries))),
+            );
+        }
+    }
+
+    group.finish();
+}
+
+fn get_task7_numbers_queries<R: rand::Rng>(
+    numbers_count: usize,
+    queries_count: usize,
+    queries_probability: f64,
+    rng: &mut R,
+) -> (Vec<u32>, Vec<task7::Query>) {
+    (
+        (0..numbers_count)
+            .into_iter()
+            .map(|i| rng.random_range(0..u32::MAX))
+            .collect(),
+        (1..=queries_count)
+            .into_iter()
+            .map(|i| match rng.random_bool(queries_probability) {
+                true => {
+                    let bound = rng.random_range(1..(numbers_count - 1));
+                    task7::Query::Sum {
+                        start: rng.random_range(0..bound),
+                        end: rng.random_range(bound..numbers_count),
+                    }
+                }
+                false => task7::Query::Replace {
+                    index: rng.random_range(0..numbers_count),
+                    element: rng.random_range(0..u32::MAX),
+                },
+            })
+            .collect(),
+    )
+}
+
 pub fn criterion_benchmark(c: &mut Criterion) {
     test_task2(c);
     task3_test(c);
     task5_bench(c);
+    task7_bench(c);
 }
 
 criterion_group!(benches, criterion_benchmark);
