@@ -5,7 +5,7 @@ use criterion::{
     black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
     PlotConfiguration,
 };
-use lab4::tasks::{task2, task3, task5, task7};
+use lab4::tasks::{task10, task2, task3, task5, task7};
 use rand::Rng;
 
 fn test_task2(c: &mut Criterion) {
@@ -143,11 +143,26 @@ fn get_task7_numbers_queries<R: rand::Rng>(
     )
 }
 
+fn task10_bench(c: &mut Criterion) {
+    let mut strings = Vec::new();
+
+    for i in 0..100000 {
+        let mut string = String::new();
+        for j in 0..10000 {
+            string.push(char::from_u32('A' as u32 + (j % 26) as u32).unwrap());
+        }
+        strings.push(string);
+    }
+
+    c.bench_function("task10", |b| b.iter(|| task10::solve(black_box(&strings))));
+}
+
 pub fn criterion_benchmark(c: &mut Criterion) {
     test_task2(c);
     task3_test(c);
     task5_bench(c);
     task7_bench(c);
+    task10_bench(c);
 }
 
 criterion_group!(benches, criterion_benchmark);
