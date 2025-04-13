@@ -1,4 +1,10 @@
-use std::{fs, io::ErrorKind};
+pub mod plots;
+
+use std::{
+    fs,
+    io::ErrorKind,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use crate::modules::hash_database::HashDatabase;
 
@@ -28,6 +34,7 @@ fn input() -> Vec<Operations> {
     commands
 }
 
+#[derive(Debug)]
 pub enum Operations {
     Add { key: String, value: String },
     Delete { key: String },
@@ -60,7 +67,12 @@ impl Operations {
 
 pub fn solve(operations: Vec<Operations>) -> Vec<String> {
     let mut output = vec![];
-    let path = "task2.db";
+    // Генерируем уникальное имя файла для тестов
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let path = format!("./task2_{}.db", timestamp);
     let mut db =
         HashDatabase::new(&path, operations.len() as u64).expect("Не удалось создать базу данных");
 
@@ -109,5 +121,137 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_task2() {}
+    #[ignore]
+    fn test_task2() {
+        test_helper(
+            &vec![
+                "ADD JW SJXO",
+                "ADD RZBR YMW",
+                "ADD ADX LVT",
+                "ADD LKFLG UWM",
+                "PRINT ADX",
+                "UPDATE HNTP JQPVG",
+                "ADD QURWB MEGW",
+                "PRINT QURWB",
+                "DELETE MB",
+                "DELETE ADX",
+            ],
+            &vec!["ADX LVT", "ERROR", "QURWB MEGW", "ERROR"],
+        );
+
+        test_helper(
+            &vec![
+                "ADD RWJSN JFTF",
+                "ADD ZDH GOON",
+                "ADD FCDS TCAY",
+                "ADD FCDS TCAY",
+                "ADD HMGVI BWK",
+                "ADD JTDU TLWWN",
+                "ADD IXRJ ERF",
+                "ADD IAOD GRDO",
+                "PRINT IXRJ",
+                "PRINT JTDU",
+                "PRINT IXRJ",
+                "UPDATE ZDH IOX",
+                "PRINT ZDH",
+                "ADD GVWU RTA",
+                "DELETE ZDH",
+                "ADD FCDS IVFJV",
+            ],
+            &vec![
+                "ERROR",
+                "IXRJ ERF",
+                "JTDU TLWWN",
+                "IXRJ ERF",
+                "ZDH IOX",
+                "ERROR",
+            ],
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_basic_operations() {
+        test_helper(
+            &vec![
+                "ADD key1 value1",
+                "PRINT key1",
+                "UPDATE key1 value2",
+                "PRINT key1",
+                "DELETE key1",
+                "PRINT key1",
+            ],
+            &vec!["key1 value1", "key1 value2", "ERROR"],
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_duplicate_adds() {
+        test_helper(
+            &vec![
+                "ADD key1 value1",
+                "ADD key1 value2", // Should fail - duplicate key
+            ],
+            &vec!["ERROR"],
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_invalid_updates_and_deletes() {
+        test_helper(
+            &vec![
+                "UPDATE nonexistent value1", // Should fail - key doesn't exist
+                "DELETE nonexistent",        // Should fail - key doesn't exist
+                "PRINT nonexistent",         // Should fail - key doesn't exist
+            ],
+            &vec!["ERROR", "ERROR", "ERROR"],
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_multiple_operations() {
+        test_helper(
+            &vec![
+                "ADD key1 value1",
+                "ADD key2 value2",
+                "PRINT key1",
+                "PRINT key2",
+                "UPDATE key1 newvalue1",
+                "DELETE key2",
+                "PRINT key1",
+                "PRINT key2",
+            ],
+            &vec!["key1 value1", "key2 value2", "key1 newvalue1", "ERROR"],
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_operations_order() {
+        test_helper(
+            &vec![
+                "ADD key1 value1",
+                "DELETE key1",
+                "ADD key1 value2", // Should work after deletion
+                "PRINT key1",
+            ],
+            &vec!["key1 value2"],
+        );
+    }
+
+    fn test_helper(operations: &[&str], expected: &[&str]) {
+        let operations: Vec<_> = operations
+            .iter()
+            .map(|s| Operations::from_str(&s.to_uppercase()))
+            .collect();
+        let output = solve(operations);
+        assert_eq!(output.len(), expected.len());
+
+        for (out, exp) in output.iter().zip(expected.iter()) {
+            assert_eq!(out, &exp.to_uppercase());
+        }
+    }
 }

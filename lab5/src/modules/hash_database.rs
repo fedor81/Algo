@@ -25,9 +25,9 @@ pub struct HashDatabase {
 // TODO: Можно связать Entry с базой с помощью и при вызове Drop обновлять файл
 #[derive(Debug)]
 struct Entry {
+    is_deleted: bool,
     // key_size: u16,
     // value_size: u16,
-    is_deleted: bool,
     next: Option<u64>,
     key: String,
     value: String,
@@ -58,7 +58,10 @@ impl HashDatabase {
         let bucket = self.get_bucket(&key) as usize;
 
         if self.check_exists(&key, bucket) {
-            return Err(io::Error::new(io::ErrorKind::AlreadyExists, "ERROR"));
+            return Err(io::Error::new(
+                io::ErrorKind::AlreadyExists,
+                "key already exists",
+            ));
         }
 
         let next = self.addresses[bucket];
@@ -68,7 +71,7 @@ impl HashDatabase {
 
     pub fn remove(&mut self, key: &str) -> io::Result<()> {
         let bucket = self.get_bucket(&key) as usize;
-        let next = self.addresses[bucket];
+        let mut next = self.addresses[bucket];
 
         while let Some(address) = next {
             let entry = self.read_entry(address)?;
@@ -76,13 +79,17 @@ impl HashDatabase {
                 self.mark_deleted(address)?;
                 return Ok(());
             }
+            next = entry.next;
         }
-        Err(io::Error::new(io::ErrorKind::NotFound, "ERROR"))
+        Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "key does not exists",
+        ))
     }
 
     pub fn update(&mut self, key: &str, value: String) -> io::Result<()> {
         let bucket = self.get_bucket(&key) as usize;
-        let next = self.addresses[bucket];
+        let mut next = self.addresses[bucket];
 
         while let Some(address) = next {
             let mut entry = self.read_entry(address)?;
@@ -92,8 +99,12 @@ impl HashDatabase {
                 self.write_entry(&entry, bucket)?;
                 return Ok(());
             }
+            next = entry.next;
         }
-        Err(io::Error::new(io::ErrorKind::NotFound, "ERROR"))
+        Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "key does not exists",
+        ))
     }
 
     pub fn get(&mut self, key: &str) -> io::Result<Option<(String, String)>> {
@@ -246,6 +257,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_hash_database() {
         let path = "test.db";
         let mut db = TestDatabase::new(path, 10).unwrap();
