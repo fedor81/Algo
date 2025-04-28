@@ -5,7 +5,6 @@ pub fn heap_sort<T: Ord>(collection: &mut Vec<T>, reverse: bool) {
 pub fn heap_sort_cmp<F, T>(collection: &mut Vec<T>, cmp: F)
 where
     F: Fn(&T, &T) -> bool,
-    T: Ord,
 {
     if collection.len() <= 1 {
         return;
@@ -24,7 +23,6 @@ where
 fn heapify<T, F>(collection: &mut Vec<T>, len: usize, index: usize, cmp: F)
 where
     F: Fn(&T, &T) -> bool,
-    T: Ord,
 {
     let mut largest = index; // Сравниваем три элемента
     let left = 2 * index + 1;

@@ -1,0 +1,12 @@
+[package]
+name = "lab6"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+criterion = "0.5.1"
+lab3 = { path = "../lab3" }
+
+[[bench]]
+name = "benchmarks"
+harness = false
