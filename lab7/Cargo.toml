@@ -1,7 +1,6 @@
 [package]
-name = "lab6"
+name = "lab7"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-lab3 = { path = "../lab3" }
