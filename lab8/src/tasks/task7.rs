@@ -4,7 +4,7 @@ pub fn run() {
     let stdin = std::io::stdin();
     let mut reader = BufReader::new(stdin);
     let (s1, s2) = input(&mut reader);
-    let result = solve(&s1, &s2);
+    let result = find_shift(&s1, &s2);
 
     if let Some(result) = result {
         println!("{}", result);
@@ -13,27 +13,20 @@ pub fn run() {
     }
 }
 
-pub fn solve(s: &str, t: &str) -> Option<usize> {
-    if s == t {
-        return Some(0);
-    }
+/// Определяет число циклических сдвигов для получения строки T из S, либо выясняет,
+/// что T не может быть получена из S.
+pub fn find_shift(s: &str, t: &str) -> Option<usize> {
+    let pattern = s.chars().collect::<Vec<_>>();
+    let string = t.chars().chain(t.chars()).collect::<Vec<_>>();
+    let length = string.len();
+    let z = z_function(&pattern, &string);
 
-    let s_chars = s.chars().collect::<Vec<_>>();
-    let t_chars = t.chars().collect::<Vec<_>>();
-    let length = s_chars.len();
-
-    for offset in (0..length).rev() {
-        let mut find = true;
-        for i in 0..(2 * length) {
-            if s_chars[(i + offset) % length] != t_chars[i % length] {
-                find = false;
-                break;
-            }
-        }
-        if find {
-            return Some(length - offset);
+    for i in 0..length {
+        if z[i] >= pattern.len() {
+            return Some(i);
         }
     }
+
     None
 }
 
@@ -51,106 +44,65 @@ fn input<T: BufRead>(reader: &mut T) -> (String, String) {
     (s1.trim().to_string(), s2.trim().to_string())
 }
 
-/// Определяет число циклических сдвигов для получения строки T из S, либо выясняет,
-/// что T не может быть получена из S.
-///
-/// ## Алгоритм Кнута-Морриса-Пратта (KMP)
-///
-/// 1. **Построить `lps`-массив** для подстроки \( T \).  
-/// 2. **Поиск в тексте \( S \)** с использованием `lps`:  
-///    - Сравниваем символы \( S \) и \( T \).  
-///    - Если символы совпадают — двигаемся дальше.  
-///    - Если нет — используем `lps`, чтобы "перепрыгнуть" уже проверенную часть.
-///
-/// ## Пример работы
-///
-/// ### Дано:
-/// - \( S = "ABABDABACDABABCABAB" \),  
-/// - \( T = "ABABCABAB" \),  
-/// - `lps = [0, 0, 1, 2, 0, 1, 2, 3, 4]`.  
-///
-/// ### Пошаговый поиск:
-/// 1. Совпадение до `"ABAB"`, затем несоответствие (`'D' != 'C'`).  
-/// 2. `j` сбрасывается до `lps[3] = 2` (потому что `lps[j-1] = lps[3] = 2`).  
-/// 3. Продолжаем сравнение с `T[2]` (вместо начала).  
-/// 4. Находим полное совпадение на позиции `10`.  
-pub fn find_shift_kmp(s: &str, t: &str) -> Option<usize> {
-    if s == t {
-        return Some(0);
-    }
+pub fn z_function(pattern: &[char], string: &[char]) -> Vec<usize> {
+    let mut z = vec![0; string.len()];
 
-    let s_chars = s.chars().collect::<Vec<_>>();
-    let t_chars = t.chars().collect::<Vec<_>>();
-    let length = s_chars.len();
-
-    if length != t_chars.len() {
-        return None;
-    }
-
-    let mut i = 0; // Индекс для S + S
-    let mut j = 0; // Индекс для T
-    let lps = compute_lps(&t_chars);
-
-    while i < 2 * length {
-        // Эмулируем S + S через S[i % N]
-        if s_chars[i % length] == t_chars[j] {
-            i += 1;
-            j += 1;
-            if j == length {
-                return Some((i - j) % length);
-            }
-        } else {
-            if j != 0 {
-                j = lps[j - 1];
-            } else {
-                i += 1;
-            }
+    // Значение функции для первого символа
+    for i in 0..=string.len() {
+        let letter = pattern.get(i);
+        if letter.is_none() || letter != string.get(i) {
+            z[0] = i;
+            break;
         }
     }
 
-    None
+    let mut l = 0;
+    let mut r = 0;
+
+    for i in 1..string.len() {
+        // если мы уже видели этот символ
+        if i <= r {
+            // то мы можем попробовать его инициализировать z[i - l],
+            // но не дальше правой границы: там мы уже ничего не знаем
+            z[i] = (r - i + 1).min(z[i - l]);
+        }
+
+        // дальше каждое успешное увеличение z[i] сдвинет z-блок на единицу
+        while i + z[i] < string.len() && pattern[z[i] % pattern.len()] == string[i + z[i]] {
+            z[i] += 1;
+        }
+
+        // проверим, правее ли мы текущего z-блока
+        if i + z[i] - 1 > r {
+            l = i;
+            r = i + z[i] - 1;
+        }
+    }
+    z
 }
 
-/// Строит префикс-функцию для строки
-///
-/// Префикс-функция для подстроки T — это массив lps(longest prefix suffix), где:
-/// `lps[i]` = длина наибольшего собственного префикса `T[0..i]`, который также является суффиксом.
-///
-/// ### Пример для \( T = "ABABCABAB" \):
-///
-/// | Индекс (i) | Подстрока \(T[0..i]\) | Наибольший префикс = суффикс | `lps[i]` |
-/// |------------|--------------------------|-----------------------------|----------|
-/// | 0          | "A"                      | "" (нет)                    | 0        |
-/// | 1          | "AB"                     | ""                          | 0        |
-/// | 2          | "ABA"                    | "A"                         | 1        |
-/// | 3          | "ABAB"                   | "AB"                        | 2        |
-/// | 4          | "ABABC"                  | ""                          | 0        |
-/// | 5          | "ABABCA"                 | "A"                         | 1        |
-/// | 6          | "ABABCAB"                | "AB"                        | 2        |
-/// | 7          | "ABABCABA"               | "ABA"                       | 3        |
-/// | 8          | "ABABCABAB"              | "ABAB"                      | 4        |
-///
-/// **Итоговый `lps = [0, 0, 1, 2, 0, 1, 2, 3, 4]`**
-fn compute_lps(pattern: &[char]) -> Vec<usize> {
-    let mut lps = vec![0; pattern.len()];
-    let mut length = 0;
-    let mut i = 1;
+pub fn prefix_function(s: &str, t: &str) -> Vec<usize> {
+    let s_chars = s.chars().collect::<Vec<_>>();
+    let t_chars = t.chars().collect::<Vec<_>>();
+    assert_eq!(s_chars.len(), t_chars.len(), "Strings must have equal length");
+    let length = s_chars.len();
 
-    while i < pattern.len() {
-        if pattern[i] == pattern[length] {
-            length += 1;
-            lps[i] = length;
-            i += 1;
-        } else {
-            if length != 0 {
-                length = lps[length - 1];
-            } else {
-                lps[i] = 0;
-                i += 1;
-            }
+    // Считаем префикс-функцию
+    let mut lps = vec![0; length];
+
+    for i in 1..length {
+        let mut k = lps[i - 1];
+
+        while k > 0 && t_chars[i] != s_chars[k] {
+            k = lps[k - 1];
         }
+
+        if t_chars[i] == s_chars[k] {
+            k += 1;
+        }
+        lps[i] = k;
     }
-    return lps;
+    lps
 }
 
 #[cfg(test)]
@@ -171,29 +123,24 @@ abracadabra
 racadabraab
 ";
         let (s1, s2) = input(&mut Cursor::new(s));
-        let actual = solve(&s1, &s2);
+        let actual = find_shift(&s1, &s2);
 
         assert_eq!(actual, Some(9));
     }
 
     #[test]
-    fn test_aaaaaa() {
-        assert_eq!(solve("aaaaaa", "aaaaaa"), Some(0));
-    }
-
-    #[test]
     fn test_abaaaa() {
-        assert_eq!(solve("abaaaa", "aaaaba"), Some(3));
-        assert_eq!(solve("abaaaa", "aaabaa"), Some(2));
-        assert_eq!(solve("abaaaa", "baaaaa"), Some(5));
-        assert_eq!(solve("abaaaa", "aaaaaa"), None);
+        assert_eq!(find_shift("abaaaa", "aaaaba"), Some(3));
+        assert_eq!(find_shift("abaaaa", "aaabaa"), Some(2));
+        assert_eq!(find_shift("abaaaa", "baaaaa"), Some(5));
+        assert_eq!(find_shift("abaaaa", "aaaaaa"), None);
     }
 
     #[test]
     fn test_no_possible_shift() {
-        assert_eq!(solve("hello", "world"), None);
-        assert_eq!(solve("abcde", "bcdea"), Some(4));
-        assert_eq!(solve("abcde", "cdeab"), Some(3));
+        assert_eq!(find_shift("hello", "world"), None);
+        assert_eq!(find_shift("abcde", "bcdea"), Some(4));
+        assert_eq!(find_shift("abcde", "cdeab"), Some(3));
     }
 
     #[test]
@@ -207,46 +154,83 @@ racadabraab
         ];
 
         for (s1, s2, expected) in test_cases {
-            assert_eq!(solve(s1, s2), expected, "Failed for s1: {}, s2: {}", s1, s2);
+            assert_eq!(find_shift(s1, s2), expected, "Failed for s1: {}, s2: {}", s1, s2);
         }
     }
 
     #[test]
     fn test_special_patterns() {
         // Test with repeating patterns
-        assert_eq!(solve("aaaa", "aaaa"), Some(0));
-        assert_eq!(solve("abab", "abab"), Some(0));
-        assert_eq!(solve("abab", "baba"), Some(1));
+        assert_eq!(find_shift("aaaa", "aaaa"), Some(0));
+        assert_eq!(find_shift("abab", "abab"), Some(0));
+        assert_eq!(find_shift("abab", "baba"), Some(1));
     }
 
     #[test]
+    // #[ignore]
     fn test_big_strings() {
-        assert_eq!(solve(&"b".repeat(COUNT), &"a".repeat(COUNT)), None);
-        assert_eq!(solve(&"ab".repeat(COUNT / 2), &"ba".repeat(COUNT / 2)), Some(1));
+        assert_eq!(find_shift(&"b".repeat(COUNT), &"a".repeat(COUNT)), None);
+        assert_eq!(find_shift(&"ab".repeat(COUNT / 2), &"ba".repeat(COUNT / 2)), Some(1));
         assert_eq!(
-            solve(
+            find_shift(
+                &format!("{}a", "b".repeat(COUNT - 1)),
+                &format!("a{}", "b".repeat(COUNT - 1))
+            ),
+            Some(1)
+        );
+        assert_eq!(
+            find_shift(
                 &format!("a{}", "b".repeat(COUNT - 1)),
                 &format!("{}a", "b".repeat(COUNT - 1))
             ),
-            Some(1)
+            Some(COUNT - 1)
         );
     }
 
     #[test]
+    // #[ignore]
     fn test_random_strings() {
         let s = Alphanumeric.sample_string(&mut rand::rng(), COUNT);
         let shift = rand::random_range(1..COUNT);
         let t = format!("{}{}", &s[shift..], &s[..shift]);
-        assert_eq!(solve(&s, &t), Some(shift));
+        assert_eq!(find_shift(&s, &t), Some(COUNT - shift));
     }
 
     #[test]
-    fn test_compute_lps() {
+    fn test_prefix_function() {
+        test_prefix_function_helper("abracadabra", "abaracardar", &vec![0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0]);
+        test_prefix_function_helper("abracadabra", "abracadabra", &vec![0, 0, 0, 1, 0, 1, 0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_z_function() {
+        test_z_function_helper("abracadabra", "abaracardar", &vec![2, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0]);
+        test_z_function_helper("abracadabra", "abracadabra", &vec![11, 0, 0, 1, 0, 1, 0, 4, 0, 0, 1]);
+        test_z_function_helper("abaaba", "abaaba", &vec![6, 0, 1, 3, 0, 1]);
+        test_z_function_helper("aba", "abaaba", &vec![3, 0, 1, 3, 0, 1]);
+    }
+
+    fn test_z_function_helper(s: &str, t: &str, expected: &[usize]) {
+        let z = z_function(&s.chars().collect::<Vec<_>>(), &t.chars().collect::<Vec<_>>());
+
         assert_eq!(
-            compute_lps(&['A', 'B', 'A', 'B', 'C', 'A', 'B', 'A', 'B']),
-            vec![0, 0, 1, 2, 0, 1, 2, 3, 4]
+            z,
+            expected,
+            "\nS:\t[{}]\nT:\t[{}]",
+            s.chars().map(|c| c.to_string()).collect::<Vec<_>>().join(", "),
+            t.chars().map(|c| c.to_string()).collect::<Vec<_>>().join(", "),
         );
-        assert_eq!(compute_lps(&['A', 'A', 'A', 'A']), vec![0, 1, 2, 3]);
-        assert_eq!(compute_lps(&['A', 'B', 'C']), vec![0, 0, 0]);
+    }
+
+    fn test_prefix_function_helper(s: &str, t: &str, expected: &[usize]) {
+        let lps = prefix_function(s, t);
+
+        assert_eq!(
+            lps,
+            expected,
+            "\nS:\t[{}]\nT:\t[{}]",
+            s.chars().map(|c| c.to_string()).collect::<Vec<_>>().join(", "),
+            t.chars().map(|c| c.to_string()).collect::<Vec<_>>().join(", "),
+        );
     }
 }
