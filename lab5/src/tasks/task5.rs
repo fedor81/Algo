@@ -1,3 +1,5 @@
+pub mod plots;
+
 pub fn run() {
     let (radius, points) = input();
     let stations = solve(radius, &points);
@@ -121,13 +123,7 @@ mod tests {
     fn test_task5() {
         test_helper(
             5.0,
-            vec![
-                (0.0, 0.0),
-                (2.0, -2.0),
-                (5.0, 10.0),
-                (0.0, 100.0),
-                (-10.0, 0.0),
-            ],
+            vec![(0.0, 0.0), (2.0, -2.0), (5.0, 10.0), (0.0, 100.0), (-10.0, 0.0)],
             vec![(0, 1), (1, 1), (2, 0), (3, 0), (4, 0)],
         );
     }

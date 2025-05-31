@@ -1,5 +1,3 @@
-pub mod plots;
-
 use std::{
     fs,
     io::ErrorKind,
